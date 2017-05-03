@@ -171,11 +171,23 @@ public class AssetLinkNode extends Node {
         assetLoaderKeys = (ArrayList<ModelKey>) capsule.readSavableArrayList("assetLoaderKeyList", new ArrayList<ModelKey>());
         for (Iterator<ModelKey> it = assetLoaderKeys.iterator(); it.hasNext();) {
             ModelKey modelKey = it.next();
-            AssetInfo info = loaderManager.locateAsset(modelKey);
-            Spatial child = null;
-            if (info != null) {
+            
+            Spatial child = loaderManager.getFromCache(modelKey);
+            if(child == null) {
+                AssetInfo info = loaderManager.locateAsset(modelKey);
                 child = (Spatial) importer.load(info);
+
+                if(child != null) {
+                    loaderManager.addToCache(modelKey, child);
+                }
+            } else {
+                // This miss, however, the DesktopAssetManager.registerAndCloneSmartAsset.
+                child = child.clone();
+
+                // The miss above can be solved using the commented line instead, what would retrieve again the model from the cache
+//                    child = loaderManager.loadAsset(modelKey);
             }
+            
             if (child != null) {
                 child.parent = this;
                 children.add(child);
